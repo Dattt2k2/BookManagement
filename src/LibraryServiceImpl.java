@@ -6,7 +6,7 @@ import java.util.List;
 
 public class LibraryServiceImpl extends UnicastRemoteObject implements LibraryService {
 
-    private static final String DB_URL = "jdbc:mysql://localhost:3306/library?useSSL=false&serverTimezone=UTC"; 
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/library?useSSL=false&serverTimezone=UTC";
     private static final String USER = "root"; 
     private static final String PASS = "";     
     
@@ -27,6 +27,7 @@ public class LibraryServiceImpl extends UnicastRemoteObject implements LibrarySe
             throw new RemoteException("Failed to connect to database", e);
         }
     }
+
 
     @Override
     public Book addBook(Book book) throws RemoteException {

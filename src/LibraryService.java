@@ -8,5 +8,6 @@ public interface LibraryService extends Remote {
     public Book updateBook(Book book) throws RemoteException;
     public void deleteBook(String isbn) throws RemoteException;
     public List<Book> viewAllBooks() throws RemoteException;
+
 }
 
