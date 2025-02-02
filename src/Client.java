@@ -10,6 +10,7 @@ public class Client extends JFrame {
     private JPanel mainPanel;
     private LibraryService libraryService;
     private HomePanel homePanel;
+    private Book book;
 
     public void connectToServer(){
         try{
@@ -38,7 +39,7 @@ public class Client extends JFrame {
         mainPanel.add(homePanel, "Home");
 //        HomePanel homePanel = new HomePanel(libraryService);
         mainPanel.add(new AddBookPanel(libraryService, homePanel), "Add Book");
-        mainPanel.add(new EditBookPanel(libraryService, homePanel), "Edit Book");
+        mainPanel.add(new EditBookPanel(libraryService, homePanel, book ), "Edit Book");
 
         JPanel menuPanel = createMenuPanel();
 
@@ -60,7 +61,22 @@ public class Client extends JFrame {
         btnHome.addActionListener(e -> {cardLayout.show(mainPanel, "Home"); homePanel.loadBookList();});
         btnAddBook.addActionListener(e -> cardLayout.show(mainPanel, "Add Book"));
 //        btnViewBook.addActionListener(e -> cardLayout.show(mainPanel, "View Book"));
-        btnEditBook.addActionListener(e -> cardLayout.show(mainPanel, "Edit Book"));
+        btnEditBook.addActionListener(e -> {
+            Book seletedBook = homePanel.getSelectedBook();
+            if(seletedBook != null){
+                mainPanel.remove(mainPanel.getComponent(2));
+                mainPanel.add(new EditBookPanel(libraryService, homePanel, seletedBook), "Edit Book");
+                cardLayout.show(mainPanel, "Edit Book");
+            }else{
+                JOptionPane.showMessageDialog(
+                        null,
+                        "Please select a book from the table",
+                        "No selection",
+                        JOptionPane.WARNING_MESSAGE);
+
+            }
+        });
+//        btnEditBook.addActionListener(e -> cardLayout.show(mainPanel, "Edit Book"));
         panel.add(btnHome);
         panel.add(btnAddBook);
 //        panel.add(btnViewBook);
@@ -128,7 +144,8 @@ class HomePanel extends JPanel implements BookUpdateListener {
         loadBookList();
         getSelectedBook();
         deleteButton.addActionListener(e ->{
-            if(selectedBook != null){
+            Book bookToDelete = getSelectedBook();
+            if(bookToDelete != null){
                 try{
                     int confirm = JOptionPane.showConfirmDialog(
                             this,
@@ -137,7 +154,7 @@ class HomePanel extends JPanel implements BookUpdateListener {
                             JOptionPane.YES_NO_OPTION
                     );
                     if(confirm == JOptionPane.YES_OPTION){
-                        libraryService.deleteBook(selectedBook.getIsbn());
+                        libraryService.deleteBook(bookToDelete.getIsbn());
                         loadBookList();
                         selectedBook = null;
                     }
@@ -197,23 +214,37 @@ class HomePanel extends JPanel implements BookUpdateListener {
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
-    Book getSelectedBook(){
-        bookTable.getSelectionModel().addListSelectionListener(e -> {
-            if(!e.getValueIsAdjusting() && bookTable.getSelectedRow() != -1){
-                int selectedRow = bookTable.getSelectedRow();
-                selectedBook = new Book(
-                        (String) tableModel.getValueAt(selectedRow, 0),
-                        (String) tableModel.getValueAt(selectedRow, 1),
-                        (String) tableModel.getValueAt(selectedRow, 2),
-                        (String) tableModel.getValueAt(selectedRow, 3),
-                        (int) tableModel.getValueAt(selectedRow, 4),
-                        (int) tableModel.getValueAt(selectedRow, 5)
-                );
-            }
-        });
-
-        return null;
+//    Book getSelectedBook(){
+//        bookTable.getSelectionModel().addListSelectionListener(e -> {
+//            if(!e.getValueIsAdjusting() && bookTable.getSelectedRow() != -1){
+//                int selectedRow = bookTable.getSelectedRow();
+//                selectedBook = new Book(
+//                        (String) tableModel.getValueAt(selectedRow, 0),
+//                        (String) tableModel.getValueAt(selectedRow, 1),
+//                        (String) tableModel.getValueAt(selectedRow, 2),
+//                        (String) tableModel.getValueAt(selectedRow, 3),
+//                        (int) tableModel.getValueAt(selectedRow, 4),
+//                        (int) tableModel.getValueAt(selectedRow, 5)
+//                );
+//            }
+//        });
+//
+//        return null;
+//    }
+public Book getSelectedBook() {
+    int selectedRow = bookTable.getSelectedRow();
+    if (selectedRow != -1) {
+        return new Book(
+                (String) tableModel.getValueAt(selectedRow, 0),
+                (String) tableModel.getValueAt(selectedRow, 1),
+                (String) tableModel.getValueAt(selectedRow, 2),
+                (String) tableModel.getValueAt(selectedRow, 3),
+                (int) tableModel.getValueAt(selectedRow, 4),
+                (int) tableModel.getValueAt(selectedRow, 5)
+        );
     }
+    return null;
+}
     void loadBookList(){
         try{
             List<Book> books = libraryService.viewAllBooks();
@@ -346,17 +377,156 @@ class AddBookPanel extends JPanel{
 }
 
 
+//class EditBookPanel extends JPanel {
+//    private JTextField isbnField, titleField, authorField, publisherField, yearField, quantityField;
+//    private LibraryService libraryService;
+//    private BookUpdateListener listener;
+//    private HomePanel homePanel;
+//    private  Book book;
+//
+//    public EditBookPanel(LibraryService libraryService, BookUpdateListener listener) {
+//        this.libraryService = libraryService;
+//        this.listener = listener;
+//        this.homePanel = homePanel;
+//
+//        setLayout(new BorderLayout());
+//
+//        JLabel titleLabel = new JLabel("Edit Book", SwingConstants.CENTER);
+//        titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
+//        add(titleLabel, BorderLayout.NORTH);
+//
+//        // Form panel
+//        JPanel formPanel = new JPanel(new GridLayout(6, 2, 10, 10));
+//        formPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+//
+//        formPanel.add(new JLabel("ISBN:"));
+//        isbnField = new JTextField(15);
+//        isbnField.setEditable(false); // ISBN shouldn't be editable
+//        formPanel.add(isbnField);
+//
+//        formPanel.add(new JLabel("Title:"));
+//        titleField = new JTextField(15);
+//        formPanel.add(titleField);
+//
+//        formPanel.add(new JLabel("Author:"));
+//        authorField = new JTextField(15);
+//        formPanel.add(authorField);
+//
+//        formPanel.add(new JLabel("Publisher:"));
+//        publisherField = new JTextField(15);
+//        formPanel.add(publisherField);
+//
+//        formPanel.add(new JLabel("Year:"));
+//        yearField = new JTextField(15);
+//        formPanel.add(yearField);
+//
+//        formPanel.add(new JLabel("Quantity:"));
+//        quantityField = new JTextField(15);
+//        formPanel.add(quantityField);
+//
+//        JPanel centerPanel = new JPanel(new BorderLayout());
+//        centerPanel.add(formPanel, BorderLayout.NORTH);
+//        add(centerPanel, BorderLayout.CENTER);
+//
+//        // Button panel
+//        JPanel buttonPanel = new JPanel();
+//        JButton loadButton = new JButton("Load Selected Book");
+//        JButton updateButton = new JButton("Update Book");
+//        loadButton.setBackground(new Color(70, 130, 180));
+//        loadButton.setForeground(Color.WHITE);
+//        updateButton.setBackground(new Color(46, 139, 87));
+//        updateButton.setForeground(Color.WHITE);
+//
+//        buttonPanel.add(loadButton);
+//        buttonPanel.add(updateButton);
+//        add(buttonPanel, BorderLayout.SOUTH);
+//
+//        // Load button action
+//        loadButton.addActionListener(e -> {
+//            Book selectedBook = homePanel.getSelectedBook();
+//            if (selectedBook != null) {
+//                loadBookData(selectedBook);
+//            } else {
+//                JOptionPane.showMessageDialog(this,
+//                        "Please select a book from the home page first",
+//                        "No Selection",
+//                        JOptionPane.WARNING_MESSAGE);
+//            }
+//        });
+//
+//        // Update button action
+//        updateButton.addActionListener(e -> updateBook());
+//    }
+//
+//    private void loadBookData(Book book) {
+//        isbnField.setText(book.getIsbn());
+//        titleField.setText(book.getTitle());
+//        authorField.setText(book.getAuthor());
+//        publisherField.setText(book.getPublisher());
+//        yearField.setText(String.valueOf(book.getYear()));
+//        quantityField.setText(String.valueOf(book.getQuantity()));
+//    }
+//
+//    private void updateBook() {
+//        try {
+//            if (isbnField.getText().isEmpty()) {
+//                JOptionPane.showMessageDialog(this,
+//                        "Please load a book first",
+//                        "No Book Loaded",
+//                        JOptionPane.WARNING_MESSAGE);
+//                return;
+//            }
+//
+//            Book updatedBook = new Book(
+//                    isbnField.getText(),
+//                    titleField.getText(),
+//                    authorField.getText(),
+//                    publisherField.getText(),
+//                    Integer.parseInt(yearField.getText()),
+//                    Integer.parseInt(quantityField.getText())
+//            );
+//
+//            libraryService.updateBook(updatedBook);
+//            JOptionPane.showMessageDialog(this, "Book updated successfully");
+//
+//            if (listener != null) {
+//                listener.onBookListUpdated();
+//            }
+//
+//            clearFields();
+//        } catch (NumberFormatException ex) {
+//            JOptionPane.showMessageDialog(this,
+//                    "Please enter valid numbers for Year and Quantity",
+//                    "Invalid Input",
+//                    JOptionPane.ERROR_MESSAGE);
+//        } catch (RemoteException ex) {
+//            JOptionPane.showMessageDialog(this,
+//                    "Error updating book: " + ex.getMessage(),
+//                    "Error",
+//                    JOptionPane.ERROR_MESSAGE);
+//        }
+//    }
+//
+//    private void clearFields() {
+//        isbnField.setText("");
+//        titleField.setText("");
+//        authorField.setText("");
+//        publisherField.setText("");
+//        yearField.setText("");
+//        quantityField.setText("");
+//    }
+//}
+
 class EditBookPanel extends JPanel {
     private JTextField isbnField, titleField, authorField, publisherField, yearField, quantityField;
     private LibraryService libraryService;
     private BookUpdateListener listener;
-    private HomePanel homePanel;
-    private  Book book;
+    private Book book;
 
-    public EditBookPanel(LibraryService libraryService, BookUpdateListener listener) {
+    public EditBookPanel(LibraryService libraryService, BookUpdateListener listener, Book selectedBook) {
         this.libraryService = libraryService;
         this.listener = listener;
-        this.homePanel = homePanel;
+        this.book = selectedBook;
 
         setLayout(new BorderLayout());
 
@@ -399,29 +569,16 @@ class EditBookPanel extends JPanel {
 
         // Button panel
         JPanel buttonPanel = new JPanel();
-        JButton loadButton = new JButton("Load Selected Book");
         JButton updateButton = new JButton("Update Book");
-        loadButton.setBackground(new Color(70, 130, 180));
-        loadButton.setForeground(Color.WHITE);
         updateButton.setBackground(new Color(46, 139, 87));
         updateButton.setForeground(Color.WHITE);
-
-        buttonPanel.add(loadButton);
         buttonPanel.add(updateButton);
         add(buttonPanel, BorderLayout.SOUTH);
 
-        // Load button action
-        loadButton.addActionListener(e -> {
-            Book selectedBook = homePanel.getSelectedBook();
-            if (selectedBook != null) {
-                loadBookData(selectedBook);
-            } else {
-                JOptionPane.showMessageDialog(this,
-                        "Please select a book from the home page first",
-                        "No Selection",
-                        JOptionPane.WARNING_MESSAGE);
-            }
-        });
+        // Load the book data immediately
+        if (selectedBook != null) {
+            loadBookData(selectedBook);
+        }
 
         // Update button action
         updateButton.addActionListener(e -> updateBook());
@@ -438,14 +595,6 @@ class EditBookPanel extends JPanel {
 
     private void updateBook() {
         try {
-            if (isbnField.getText().isEmpty()) {
-                JOptionPane.showMessageDialog(this,
-                        "Please load a book first",
-                        "No Book Loaded",
-                        JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-
             Book updatedBook = new Book(
                     isbnField.getText(),
                     titleField.getText(),
@@ -461,8 +610,6 @@ class EditBookPanel extends JPanel {
             if (listener != null) {
                 listener.onBookListUpdated();
             }
-
-            clearFields();
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this,
                     "Please enter valid numbers for Year and Quantity",
@@ -475,15 +622,4 @@ class EditBookPanel extends JPanel {
                     JOptionPane.ERROR_MESSAGE);
         }
     }
-
-    private void clearFields() {
-        isbnField.setText("");
-        titleField.setText("");
-        authorField.setText("");
-        publisherField.setText("");
-        yearField.setText("");
-        quantityField.setText("");
-    }
 }
-
-
